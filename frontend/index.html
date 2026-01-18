@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Tracker - Отслеживание откликов</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Job Tracker</h1>
+            <p>Отслеживайте свои отклики на вакансии</p>
+        </div>
+
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-section">
+            <h2>Вход / Регистрация</h2>
+            <div id="authError" class="error hidden"></div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="authPassword" placeholder="Минимум 6 символов">
+            </div>
+            <div class="form-group">
+                <label>Я:</label>
+                <select id="userType">
+                    <option value="job_seeker">Ищу работу</option>
+                    <option value="employer">Работодатель</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="login()">Войти</button>
+            <button class="btn btn-secondary" onclick="register()">Регистрация</button>
+        </div>
+
+        <!-- Main Section -->
+        <div id="mainSection" class="main-section hidden">
+            <div class="user-info">
+                <div>
+                    <h2 id="mainTitle">Ваши вакансии</h2>
+                    <p id="userTypeDisplay" class="user-type-badge"></p>
+                </div>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+
+            <!-- Tabs for Job Seeker -->
+            <div id="jobSeekerTabs" class="tabs hidden">
+                <button class="tab-btn active" onclick="switchTab('resume')">📄 Моё резюме</button>
+                <button class="tab-btn" onclick="switchTab('applications')">📨 Мои отклики</button>
+                <button class="tab-btn" onclick="switchTab('vacancies')">💼 Все вакансии</button>
+                <button class="tab-btn" onclick="switchTab('history')">📊 История откликов</button>
+            </div>
+
+            <div id="mainError" class="error hidden"></div>
+            <div id="mainSuccess" class="success hidden"></div>
+
+            <!-- Resume Tab -->
+            <div id="resumeTab" class="tab-content hidden">
+                <div class="resume-section">
+                    <h3>Моё резюме</h3>
+                    <div class="resume-form">
+                        <div class="form-group">
+                            <label>ФИО</label>
+                            <input type="text" id="resumeName" placeholder="Иван Иванов">
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="resumeEmail" placeholder="ivan@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Телефон</label>
+                                <input type="tel" id="resumePhone" placeholder="+998 90 123 45 67">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Должность</label>
+                            <input type="text" id="resumePosition" placeholder="Python Developer">
+                        </div>
+                        <div class="form-group">
+                            <label>Опыт работы</label>
+                            <textarea id="resumeExperience" placeholder="Опишите ваш опыт работы..." rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Навыки</label>
+                            <input type="text" id="resumeSkills" placeholder="Python, Django, FastAPI, PostgreSQL">
+                        </div>
+                        <div class="form-group">
+                            <label>Образование</label>
+                            <textarea id="resumeEducation" placeholder="Университет, специальность, год окончания" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>О себе</label>
+                            <textarea id="resumeAbout" placeholder="Расскажите о себе..." rows="3"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveResume()">💾 Сохранить резюме</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applications Tab -->
+            <div id="applicationsTab" class="tab-content hidden">
+                <!-- Analytics -->
+                <div id="statsSection" class="stats">
+                    <div class="stat-card">
+                        <h3 id="statTotal">Всего откликов</h3>
+                        <div class="value" id="totalJobs">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="statInterview">Интервью</h3>
+                        <div class="value" id="interviewJobs">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="statOffer">Офферы</h3>
+                        <div class="value" id="offerJobs">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="statRate">% интервью</h3>
+                        <div class="value" id="interviewRate">0%</div>
+                    </div>
+                </div>
+
+                <!-- Add Job Form -->
+                <div class="add-job-form">
+                    <h3 id="formTitle">Добавить вакансию</h3>
+                    <div class="form-grid">
+                        <input type="text" id="newCompany" placeholder="Название компании">
+                        <input type="text" id="newPosition" placeholder="Должность">
+                        <select id="newStatus">
+                            <option value="Applied">Applied</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Offer">Offer</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                        <input type="text" id="newSalary" placeholder="Зарплата (опционально)">
+                    </div>
+                    <div class="form-full">
+                        <input type="text" id="newLink" placeholder="Ссылка на вакансию (опционально)">
+                    </div>
+                    <div class="form-full">
+                        <textarea id="newNotes" placeholder="Заметки (опционально)"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="addJob()" id="addButton">Добавить вакансию</button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <select id="filterStatus" onchange="loadJobs()">
+                        <option value="">Все статусы</option>
+                        <option value="Applied">Applied</option>
+                        <option value="Interview">Interview</option>
+                        <option value="Offer">Offer</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                    <input type="text" id="filterCompany" placeholder="Поиск по компании" onkeyup="loadJobs()">
+                </div>
+
+                <!-- Jobs List -->
+                <div id="jobsList" class="jobs-grid"></div>
+            </div>
+
+            <!-- Vacancies Tab -->
+            <div id="vacanciesTab" class="tab-content hidden">
+                <h3>Все доступные вакансии</h3>
+                <p style="color: #666; margin-bottom: 20px;">Здесь будут отображаться актуальные вакансии от работодателей</p>
+                
+                <div class="filters">
+                    <input type="text" id="vacancySearch" placeholder="Поиск вакансий" onkeyup="searchVacancies()">
+                    <select id="vacancyFilter">
+                        <option value="">Все категории</option>
+                        <option value="IT">IT / Разработка</option>
+                        <option value="Marketing">Маркетинг</option>
+                        <option value="Sales">Продажи</option>
+                        <option value="Design">Дизайн</option>
+                    </select>
+                </div>
+
+                <div id="vacanciesList" class="jobs-grid">
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        Функция поиска вакансий в разработке.<br>
+                        Скоро здесь появятся актуальные предложения от работодателей!
+                    </p>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="historyTab" class="tab-content hidden">
+                <h3>История откликов</h3>
+                <div class="timeline" id="historyTimeline">
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        История откликов пуста.<br>
+                        Начните добавлять отклики на вкладке "Мои отклики"
+                    </p>
+                </div>
+            </div>
+
+            <!-- Employer Content (shown only for employers) -->
+            <div id="employerContent" class="tab-content hidden">
+                <!-- Analytics -->
+                <div id="statsSection2" class="stats">
+                    <div class="stat-card">
+                        <h3 id="statTotal2">Всего кандидатов</h3>
+                        <div class="value" id="totalJobs2">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="statInterview2">На интервью</h3>
+                        <div class="value" id="interviewJobs2">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="statOffer2">Отправлены офферы</h3>
+                        <div class="value" id="offerJobs2">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="statRate2">% интервью</h3>
+                        <div class="value" id="interviewRate2">0%</div>
+                    </div>
+                </div>
+
+                <!-- Add Candidate Form -->
+                <div class="add-job-form">
+                    <h3>Добавить кандидата</h3>
+                    <div class="form-grid">
+                        <input type="text" id="newCompany2" placeholder="Имя кандидата">
+                        <input type="text" id="newPosition2" placeholder="Вакансия">
+                        <select id="newStatus2">
+                            <option value="Applied">Новый кандидат</option>
+                            <option value="Interview">Назначено интервью</option>
+                            <option value="Offer">Отправлен оффер</option>
+                            <option value="Rejected">Отказ</option>
+                        </select>
+                        <input type="text" id="newSalary2" placeholder="Зарплата (опционально)">
+                    </div>
+                    <div class="form-full">
+                        <input type="text" id="newLink2" placeholder="Ссылка на резюме (опционально)">
+                    </div>
+                    <div class="form-full">
+                        <textarea id="newNotes2" placeholder="Комментарии о кандидате (опционально)"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="addJob()">Добавить кандидата</button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <select id="filterStatus2" onchange="loadJobs()">
+                        <option value="">Все статусы</option>
+                        <option value="Applied">Новый кандидат</option>
+                        <option value="Interview">Назначено интервью</option>
+                        <option value="Offer">Отправлен оффер</option>
+                        <option value="Rejected">Отказ</option>
+                    </select>
+                    <input type="text" id="filterCompany2" placeholder="Поиск по имени кандидата" onkeyup="loadJobs()">
+                </div>
+
+                <!-- Candidates List -->
+                <div id="jobsList2" class="jobs-grid"></div>
+            </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editModalTitle">Редактировать вакансию</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Название компании</label>
+                    <input type="text" id="editCompany" placeholder="Название компании">
+                </div>
+                <div class="form-group">
+                    <label>Должность</label>
+                    <input type="text" id="editPosition" placeholder="Должность">
+                </div>
+                <div class="form-group">
+                    <label>Статус</label>
+                    <select id="editStatus">
+                        <option value="Applied">Applied</option>
+                        <option value="Interview">Interview</option>
+                        <option value="Offer">Offer</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Зарплата</label>
+                    <input type="text" id="editSalary" placeholder="Зарплата (опционально)">
+                </div>
+                <div class="form-group">
+                    <label>Ссылка</label>
+                    <input type="text" id="editLink" placeholder="Ссылка на вакансию (опционально)">
+                </div>
+                <div class="form-group">
+                    <label>Заметки</label>
+                    <textarea id="editNotes" placeholder="Заметки (опционально)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveEditJob()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
