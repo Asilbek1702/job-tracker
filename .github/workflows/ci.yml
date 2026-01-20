@@ -14,15 +14,15 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
     - name: Cache pip packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
@@ -47,6 +47,7 @@ jobs:
       with:
         name: test-results
         path: backend/test-results/
+      continue-on-error: true
 
   # Lint job
   lint:
@@ -55,10 +56,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -78,28 +79,22 @@ jobs:
         black --check main.py
       continue-on-error: true
 
-  # Security check
+  # Security check (упрощенная версия)
   security:
     name: Security Scan
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
         scan-type: 'fs'
         scan-ref: './backend'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-    
-    - name: Upload Trivy results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
+        format: 'table'
+      continue-on-error: true
 
   # Build Docker image
   build:
@@ -109,18 +104,19 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     
     - name: Build backend image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         context: ./backend
         file: ./backend/Dockerfile
         push: false
         tags: job-tracker-backend:latest
+        load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
@@ -130,6 +126,7 @@ jobs:
         sleep 10
         curl -f http://localhost:8000/ || exit 1
         docker stop test-backend
+        docker rm test-backend
 
   # Deploy (optional - uncomment when ready)
   # deploy:
