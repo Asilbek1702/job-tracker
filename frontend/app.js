@@ -162,11 +162,24 @@ function updateUIForUserType(type) {
         document.getElementById('jobSeekerTabs').classList.remove('hidden');
         document.getElementById('employerContent').classList.add('hidden');
         
-        // Показываем первую вкладку (резюме)
+        // Показываем первую вкладку (резюме) по умолчанию
         switchTab('resume');
+        
+        // Активируем первую кнопку
+        const firstTab = document.querySelector('.tab-btn');
+        if (firstTab) {
+            firstTab.classList.add('active');
+        }
+        
         loadResume();
         
         document.getElementById('mainTitle').textContent = 'Поиск работы';
+        
+        // Обновляем текст формы для соискателя
+        const formTitle = document.getElementById('formTitle');
+        const addButton = document.getElementById('addButton');
+        if (formTitle) formTitle.textContent = 'Добавить отклик на вакансию';
+        if (addButton) addButton.textContent = 'Добавить отклик';
         
     } else if (type === 'employer') {
         // Скрываем вкладки для работодателя
@@ -181,10 +194,11 @@ function updateUIForUserType(type) {
         // Показываем контент работодателя
         document.getElementById('employerContent').classList.remove('hidden');
         
-        document.getElementById('mainTitle').textContent = 'Мои кандидаты';
+        document.getElementById('mainTitle').textContent = 'Мои вакансии';
         
-        // Обновляем элементы для работодателя
-        updateEmployerElements();
+        // Загружаем данные работодателя
+        loadJobs();
+        loadAnalytics();
     }
 }
 
@@ -206,6 +220,9 @@ function switchTab(tabName) {
         btn.classList.remove('active');
     });
     
+    // Активируем кнопку которую нажали
+    event?.target?.classList.add('active');
+    
     // Скрываем все вкладки
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.add('hidden');
@@ -221,9 +238,6 @@ function switchTab(tabName) {
     
     if (tabs[tabName]) {
         document.getElementById(tabs[tabName]).classList.remove('hidden');
-        
-        // Активируем соответствующую кнопку
-        event?.target?.classList.add('active');
         
         // Загружаем данные для вкладки
         if (tabName === 'applications') {
@@ -279,10 +293,11 @@ function loadHistory() {
     .then(jobs => {
         if (jobs.length === 0) {
             historyTimeline.innerHTML = `
-                <p style="text-align: center; color: #666; padding: 40px;">
-                    История откликов пуста.<br>
-                    Начните добавлять отклики на вкладке "Мои отклики"
-                </p>
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">📋</div>
+                    <h3 style="color: #666; margin-bottom: 10px;">История откликов пуста</h3>
+                    <p style="color: #999;">Начните добавлять отклики на вкладке "Мои отклики"</p>
+                </div>
             `;
             return;
         }
@@ -299,18 +314,50 @@ function loadHistory() {
                     <span class="status-badge status-${job.status}" style="margin-top: 8px; display: inline-block;">
                         ${job.status}
                     </span>
+                    ${job.notes ? `<p style="color: #666; margin-top: 8px; font-size: 14px;">${escapeHtml(job.notes)}</p>` : ''}
                 </div>
             </div>
         `).join('');
     })
     .catch(error => {
         console.error('Failed to load history', error);
+        historyTimeline.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #e53e3e;">
+                <p>Не удалось загрузить историю</p>
+            </div>
+        `;
     });
 }
 
 function searchVacancies() {
     // Заглушка для поиска вакансий
     console.log('Searching vacancies...');
+}
+
+// Export functions
+async function exportToCSV() {
+    try {
+        const response = await fetch(`${API_URL}/export/csv`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `job_tracker_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showSuccess('Данные экспортированы в CSV!');
+        } else {
+            showError('main', 'Не удалось экспортировать данные');
+        }
+    } catch (error) {
+        showError('main', 'Ошибка экспорта');
+    }
 }
 
 // Analytics functions
@@ -386,18 +433,31 @@ function displayJobs(jobs) {
     
     if (jobs.length === 0) {
         const emptyText = isEmployer 
-            ? 'Нет кандидатов. Добавьте первого кандидата!' 
+            ? 'Нет вакансий. Добавьте первую вакансию!' 
             : 'Нет откликов. Добавьте первый отклик!';
         jobsList.innerHTML = `<p style="text-align: center; color: #666; padding: 40px;">${emptyText}</p>`;
         return;
     }
 
     jobsList.innerHTML = jobs.map(job => {
+        // Меняем отображение для работодателя
+        let displayTitle, displayCompany;
+        
+        if (isEmployer) {
+            // Для работодателя: company_name = название вакансии, position = имя кандидата
+            displayTitle = job.company_name; // Название вакансии
+            displayCompany = job.position || 'Кандидат'; // Имя кандидата (если указано)
+        } else {
+            // Для соискателя: company_name = компания, position = должность
+            displayTitle = job.position; // Должность
+            displayCompany = job.company_name; // Компания
+        }
+        
         // Меняем текст статусов для работодателя
         let statusText = job.status;
         if (isEmployer) {
             const statusMap = {
-                'Applied': 'Новый кандидат',
+                'Applied': 'Новый отклик',
                 'Interview': 'Назначено интервью',
                 'Offer': 'Отправлен оффер',
                 'Rejected': 'Отказ'
@@ -409,8 +469,8 @@ function displayJobs(jobs) {
         <div class="job-card">
             <div class="job-header">
                 <div>
-                    <div class="job-title">${escapeHtml(job.position)}</div>
-                    <div class="job-company">${escapeHtml(job.company_name)}</div>
+                    <div class="job-title">${escapeHtml(displayTitle)}</div>
+                    <div class="job-company">${escapeHtml(displayCompany)}</div>
                 </div>
                 <span class="status-badge status-${job.status}">${statusText}</span>
             </div>
@@ -443,20 +503,38 @@ async function addJob() {
     const linkId = isEmployer ? 'newLink2' : 'newLink';
     const notesId = isEmployer ? 'newNotes2' : 'newNotes';
     
+    const companyField = document.getElementById(companyId);
+    const positionField = document.getElementById(positionId);
+    const statusField = document.getElementById(statusId);
+    const salaryField = document.getElementById(salaryId);
+    const linkField = document.getElementById(linkId);
+    const notesField = document.getElementById(notesId);
+    
+    // Проверяем что поля существуют
+    if (!companyField || !positionField) {
+        showError('main', 'Ошибка: форма не найдена');
+        return;
+    }
+    
     const job = {
-        company_name: document.getElementById(companyId).value.trim(),
-        position: document.getElementById(positionId).value.trim(),
-        status: document.getElementById(statusId).value,
-        salary: document.getElementById(salaryId).value.trim() || null,
-        link: document.getElementById(linkId).value.trim() || null,
-        notes: document.getElementById(notesId).value.trim() || null
+        company_name: companyField.value.trim(),
+        position: positionField.value.trim() || 'Кандидат', // Для работодателя позиция опциональна
+        status: statusField.value,
+        salary: salaryField.value.trim() || null,
+        link: linkField.value.trim() || null,
+        notes: notesField.value.trim() || null
     };
 
-    const companyFieldName = isEmployer ? 'имя кандидата' : 'название компании';
-    const positionFieldName = isEmployer ? 'вакансию' : 'должность';
+    const companyFieldName = isEmployer ? 'название вакансии' : 'название компании';
 
-    if (!job.company_name || !job.position) {
-        showError('main', `Заполните ${companyFieldName} и ${positionFieldName}`);
+    if (!job.company_name) {
+        showError('main', `Заполните ${companyFieldName}`);
+        return;
+    }
+    
+    // Для соискателя должность обязательна
+    if (!isEmployer && !job.position) {
+        showError('main', 'Заполните должность');
         return;
     }
 
@@ -472,14 +550,14 @@ async function addJob() {
 
         if (response.ok) {
             // Очищаем форму
-            document.getElementById(companyId).value = '';
-            document.getElementById(positionId).value = '';
-            document.getElementById(salaryId).value = '';
-            document.getElementById(linkId).value = '';
-            document.getElementById(notesId).value = '';
+            companyField.value = '';
+            positionField.value = '';
+            salaryField.value = '';
+            linkField.value = '';
+            notesField.value = '';
             
             const successMessage = isEmployer 
-                ? 'Кандидат успешно добавлен!' 
+                ? 'Вакансия успешно добавлена!' 
                 : 'Отклик успешно добавлен!';
             showSuccess(successMessage);
             loadJobs();

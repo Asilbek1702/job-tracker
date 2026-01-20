@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
@@ -9,6 +9,8 @@ import jwt
 from passlib.context import CryptContext
 import sqlite3
 from contextlib import contextmanager
+import csv
+import io
 
 # Configuration
 SECRET_KEY = "your-secret-key-change-in-production"
@@ -300,7 +302,7 @@ def update_job(job_id: int, job_update: JobUpdate, current_user: int = Depends(g
         if not existing_job:
             raise HTTPException(status_code=404, detail="Job not found")
         
-        update_data = job_update.dict(exclude_unset=True)
+        update_data = job_update.model_dump(exclude_unset=True)
         if update_data:
             # Convert enum to value if status is being updated
             if 'status' in update_data and update_data['status']:
@@ -368,3 +370,49 @@ def root():
         "docs": "/docs",
         "version": "2.0.0"
     }
+
+# Export endpoints
+@app.get("/export/csv", tags=["Export"])
+def export_to_csv(current_user: int = Depends(get_current_user)):
+    """Экспорт вакансий в CSV"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC", (current_user,))
+        jobs = cursor.fetchall()
+    
+    if not jobs:
+        raise HTTPException(status_code=404, detail="No jobs to export")
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['ID', 'Company', 'Position', 'Status', 'Salary', 'Link', 'Notes', 'Created At', 'Updated At'])
+    
+    # Write data
+    for job in jobs:
+        writer.writerow([
+            job['id'],
+            job['company_name'],
+            job['position'],
+            job['status'],
+            job['salary'] or '',
+            job['link'] or '',
+            job['notes'] or '',
+            job['created_at'],
+            job['updated_at']
+        ])
+    
+    # Get CSV content
+    csv_content = output.getvalue()
+    output.close()
+    
+    # Return as downloadable file
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=job_tracker_export_{datetime.now().strftime('%Y%m%d')}.csv"
+        }
+    )

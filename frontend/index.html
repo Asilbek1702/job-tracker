@@ -123,6 +123,11 @@
                     </div>
                 </div>
 
+                <!-- Export button -->
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="btn btn-secondary" onclick="exportToCSV()">📥 Экспорт в CSV</button>
+                </div>
+
                 <!-- Add Job Form -->
                 <div class="add-job-form">
                     <h3 id="formTitle">Добавить вакансию</h3>
@@ -202,15 +207,15 @@
                 <!-- Analytics -->
                 <div id="statsSection2" class="stats">
                     <div class="stat-card">
-                        <h3 id="statTotal2">Всего кандидатов</h3>
+                        <h3 id="statTotal2">Всего вакансий</h3>
                         <div class="value" id="totalJobs2">0</div>
                     </div>
                     <div class="stat-card">
-                        <h3 id="statInterview2">На интервью</h3>
+                        <h3 id="statInterview2">Кандидатов на интервью</h3>
                         <div class="value" id="interviewJobs2">0</div>
                     </div>
                     <div class="stat-card">
-                        <h3 id="statOffer2">Отправлены офферы</h3>
+                        <h3 id="statOffer2">Отправлено офферов</h3>
                         <div class="value" id="offerJobs2">0</div>
                     </div>
                     <div class="stat-card">
@@ -219,42 +224,42 @@
                     </div>
                 </div>
 
-                <!-- Add Candidate Form -->
+                <!-- Add Vacancy Form -->
                 <div class="add-job-form">
-                    <h3>Добавить кандидата</h3>
+                    <h3>Добавить вакансию</h3>
                     <div class="form-grid">
-                        <input type="text" id="newCompany2" placeholder="Имя кандидата">
-                        <input type="text" id="newPosition2" placeholder="Вакансия">
+                        <input type="text" id="newCompany2" placeholder="Название вакансии">
+                        <input type="text" id="newPosition2" placeholder="Имя кандидата (опционально)">
                         <select id="newStatus2">
-                            <option value="Applied">Новый кандидат</option>
+                            <option value="Applied">Новый отклик</option>
                             <option value="Interview">Назначено интервью</option>
                             <option value="Offer">Отправлен оффер</option>
                             <option value="Rejected">Отказ</option>
                         </select>
-                        <input type="text" id="newSalary2" placeholder="Зарплата (опционально)">
+                        <input type="text" id="newSalary2" placeholder="Зарплата">
                     </div>
                     <div class="form-full">
-                        <input type="text" id="newLink2" placeholder="Ссылка на резюме (опционально)">
+                        <input type="text" id="newLink2" placeholder="Ссылка на вакансию (опционально)">
                     </div>
                     <div class="form-full">
-                        <textarea id="newNotes2" placeholder="Комментарии о кандидате (опционально)"></textarea>
+                        <textarea id="newNotes2" placeholder="Описание вакансии / требования"></textarea>
                     </div>
-                    <button class="btn btn-primary" onclick="addJob()">Добавить кандидата</button>
+                    <button class="btn btn-primary" onclick="addJob()">Добавить вакансию</button>
                 </div>
 
                 <!-- Filters -->
                 <div class="filters">
                     <select id="filterStatus2" onchange="loadJobs()">
                         <option value="">Все статусы</option>
-                        <option value="Applied">Новый кандидат</option>
+                        <option value="Applied">Новый отклик</option>
                         <option value="Interview">Назначено интервью</option>
                         <option value="Offer">Отправлен оффер</option>
                         <option value="Rejected">Отказ</option>
                     </select>
-                    <input type="text" id="filterCompany2" placeholder="Поиск по имени кандидата" onkeyup="loadJobs()">
+                    <input type="text" id="filterCompany2" placeholder="Поиск по названию вакансии" onkeyup="loadJobs()">
                 </div>
 
-                <!-- Candidates List -->
+                <!-- Vacancies List -->
                 <div id="jobsList2" class="jobs-grid"></div>
             </div>
     </div>
