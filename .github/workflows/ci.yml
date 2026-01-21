@@ -34,7 +34,7 @@ jobs:
         cd backend
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-asyncio httpx
+        pip install pytest pytest-asyncio httpx==0.24.1
     
     - name: Run tests
       run: |
