@@ -7,17 +7,3 @@ pyjwt==2.8.0
 passlib==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.6
-```
-
-**Ключевое изменение:**
-- `uvicorn` БЕЗ `[standard]`
-- `passlib` БЕЗ `[bcrypt]`
-- Добавлен `email-validator` отдельно
-
-### 2️⃣ Измените настройки Render
-
-1. Зайдите в настройки вашего сервиса на Render
-2. Найдите **Environment**
-3. Добавьте переменную окружения:
-```
-   PYTHON_VERSION = 3.11.7
