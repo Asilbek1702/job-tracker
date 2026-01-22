@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = 'https://job-tracker-api.onrender.com';
+const API_URL = 'https://job-tracker-dxl4.onrender.com';
 let token = localStorage.getItem('token');
 let userType = localStorage.getItem('userType');
 let currentEditJobId = null;
