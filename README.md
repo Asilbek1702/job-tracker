@@ -1,4 +1,6 @@
 # 📊 Job Tracker - Система управления поиском работы
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-job--tracker-blue?style=for-the-badge&logo=vercel)](https://job-tracker-nine-taupe.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render-green?style=for-the-badge&logo=render)](https://job-tracker-dxl4.onrender.com)
 
 ### Главная страница
 ![Dashboard](screenshots/dashboard.png)
